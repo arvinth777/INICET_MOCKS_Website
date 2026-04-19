@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
-import Landing from './components/Landing';
-import Quiz from './components/Quiz';
-import Result from './components/Result';
-import { questions as defaultQuestions } from './data';
 import { QuizState, Question } from './types';
 
+const Landing = lazy(() => import('./components/Landing'));
+const Quiz = lazy(() => import('./components/Quiz'));
+const Result = lazy(() => import('./components/Result'));
+
 export default function App() {
-  const [customQuestions, setCustomQuestions] = useState<Question[]>(() => {
-    const saved = localStorage.getItem('inicet_custom_questions');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
-    }
-    return defaultQuestions;
-  });
+  const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
+  const [questionsReady, setQuestionsReady] = useState(false);
 
   const [mistakes, setMistakes] = useState<Question[]>(() => {
     const saved = localStorage.getItem('inicet_mistakes');
@@ -47,8 +42,31 @@ export default function App() {
   });
 
   useEffect(() => {
+    const saved = localStorage.getItem('inicet_custom_questions');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCustomQuestions(parsed);
+          setQuestionsReady(true);
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Load bundled default questions lazily to reduce the initial JS payload.
+    import('./data')
+      .then(({ questions }) => setCustomQuestions(questions))
+      .catch((e) => console.error('Failed to load default questions', e))
+      .finally(() => setQuestionsReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (!questionsReady) return;
     localStorage.setItem('inicet_custom_questions', JSON.stringify(customQuestions));
-  }, [customQuestions]);
+  }, [customQuestions, questionsReady]);
 
   useEffect(() => {
     localStorage.setItem('inicet_quiz_state', JSON.stringify(state));
@@ -59,6 +77,7 @@ export default function App() {
   }, [state.currentQuestionIndex, state.status]);
 
   const activeQuestions = state.activeMode === 'mistakes' ? mistakes : customQuestions;
+  const isQuestionDataLoading = state.activeMode !== 'mistakes' && !questionsReady;
 
   const handleStartDaily = () => {
     if (state.status === 'result' || state.activeMode !== 'daily') {
@@ -158,41 +177,55 @@ export default function App() {
 
   return (
     <Layout onHome={state.status !== 'landing' ? handleRestart : undefined}>
-      {state.status === 'landing' && (
-        <Landing 
-          onStartDaily={handleStartDaily}
-          onStartMistakes={handleStartMistakes}
-          onUpload={handleUploadQuestions}
-          onClearMistakes={handleClearMistakes}
-          dailyCount={customQuestions.length} 
-          mistakesCount={mistakes.length}
-        />
-      )}
-      
-      {state.status === 'quiz' && (
-        <Quiz 
-          questions={activeQuestions}
-          currentIdx={state.currentQuestionIndex}
-          userAnswers={state.userAnswers}
-          markedForReview={state.markedForReview}
-          onAnswer={handleAnswer}
-          onToggleMark={handleToggleMark}
-          onJump={handleJumpToQuestion}
-          onNext={handleNext}
-          onPrev={handlePrev}
-          onFinish={handleFinish}
-        />
-      )}
+      <Suspense
+        fallback={
+          <div className="flex-1 flex items-center justify-center bg-bg-main text-text-muted text-sm font-semibold tracking-wide uppercase">
+            Loading...
+          </div>
+        }
+      >
+        {state.status === 'landing' && (
+          <Landing 
+            onStartDaily={handleStartDaily}
+            onStartMistakes={handleStartMistakes}
+            onUpload={handleUploadQuestions}
+            onClearMistakes={handleClearMistakes}
+            dailyCount={customQuestions.length} 
+            mistakesCount={mistakes.length}
+          />
+        )}
+        
+        {state.status === 'quiz' && (
+          isQuestionDataLoading ? (
+            <div className="flex-1 flex items-center justify-center bg-bg-main text-text-muted text-sm font-semibold tracking-wide uppercase">
+              Loading Questions...
+            </div>
+          ) : (
+            <Quiz 
+              questions={activeQuestions}
+              currentIdx={state.currentQuestionIndex}
+              userAnswers={state.userAnswers}
+              markedForReview={state.markedForReview}
+              onAnswer={handleAnswer}
+              onToggleMark={handleToggleMark}
+              onJump={handleJumpToQuestion}
+              onNext={handleNext}
+              onPrev={handlePrev}
+              onFinish={handleFinish}
+            />
+          )
+        )}
 
-      {state.status === 'result' && (
-        <Result 
-          questions={activeQuestions}
-          userAnswers={state.userAnswers}
-          mode={state.activeMode || 'daily'}
-          onRestart={handleRestart}
-          setMistakes={setMistakes} // Passed down to update mistakes when finishing
-        />
-      )}
+        {state.status === 'result' && (
+          <Result 
+            questions={activeQuestions}
+            userAnswers={state.userAnswers}
+            mode={state.activeMode || 'daily'}
+            onRestart={handleRestart}
+            setMistakes={setMistakes}
+          />
+        )}
+      </Suspense>
     </Layout>
   );
 }

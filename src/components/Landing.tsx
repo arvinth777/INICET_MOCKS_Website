@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, lazy, Suspense } from 'react';
 import { motion } from 'motion/react';
 import { Play, Sparkles, BookCheck, Clock, Upload, Trash2, LineChart as LineChartIcon } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Question, TestResult } from '../types';
+
+const HistoryChart = lazy(() => import('./HistoryChart'));
 
 interface LandingProps {
   onStartDaily: () => void;
@@ -206,35 +207,15 @@ export default function Landing({
 
             {chartData.length > 0 ? (
               <div className="flex-1 min-h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{ fontSize: 10, fill: '#94a3b8' }} 
-                      axisLine={false} 
-                      tickLine={false} 
-                    />
-                    <YAxis 
-                      domain={[0, 100]} 
-                      tick={{ fontSize: 10, fill: '#94a3b8' }} 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tickFormatter={(val) => `${val}%`}
-                    />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number) => [`${value}%`, 'Accuracy']}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="percentage" 
-                      stroke="#2563eb" 
-                      strokeWidth={3}
-                      dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }} 
-                      activeDot={{ r: 6 }} 
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="h-full w-full flex items-center justify-center text-text-muted text-xs font-semibold uppercase tracking-wide">
+                      Loading Chart...
+                    </div>
+                  }
+                >
+                  <HistoryChart data={chartData} />
+                </Suspense>
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-text-muted text-sm text-center">
