@@ -113,9 +113,10 @@ export default function Result({ questions, userAnswers, mode, onRestart, setMis
   };
 
   const percentage = Math.round((score / questions.length) * 100);
+  const subjectEntries = Object.entries(subjectScores) as [string, { correct: number; total: number }][];
 
   // Find lowest performing subjects (less than 50% or the lowest ones)
-  const sortedSubjects = Object.entries(subjectScores)
+  const sortedSubjects = subjectEntries
     .map(([sub, data]) => ({ sub, accuracy: data.correct / data.total }))
     .sort((a, b) => a.accuracy - b.accuracy);
   const missedTopics = sortedSubjects.filter(s => s.accuracy < 1).map(s => s.sub);
@@ -181,7 +182,7 @@ export default function Result({ questions, userAnswers, mode, onRestart, setMis
               <h3 className="font-extrabold text-lg text-text-main uppercase tracking-tight">Subject Breakdown</h3>
             </div>
             <div className="space-y-5">
-              {Object.entries(subjectScores).map(([sub, data]) => {
+              {subjectEntries.map(([sub, data]) => {
                 const subPct = Math.round((data.correct / data.total) * 100);
                 return (
                   <div key={sub}>
