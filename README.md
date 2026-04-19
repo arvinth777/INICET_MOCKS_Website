@@ -2,19 +2,42 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# INICET Mocks Website
 
-This contains everything you need to run your app locally.
+An interactive INICET mock test website built with React + Vite.
 
-View your app in AI Studio: https://ai.studio/apps/ff0778ad-84d9-4bdc-83eb-fd783546da95
+## Features
+
+- Daily mock test flow
+- Mistake bank review mode
+- Local progress memory using browser storage
+- Performance history and result analytics
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+Prerequisites: Node.js 18+ and npm
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   npm install
+2. Start development server:
+   npm run dev
+3. Open:
+   http://localhost:3000
+
+## Build for Production
+
+1. Create production build:
+   npm run build
+2. Preview production build locally:
+   npm run preview
+
+## Deploy
+
+You can deploy the generated app on any static hosting platform such as:
+- Vercel
+- Netlify
+- GitHub Pages
+
+For Vercel/Netlify, connect this repository and use:
+- Build command: npm run build
+- Output directory: dist
