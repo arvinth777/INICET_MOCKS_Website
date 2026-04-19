@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-bg-main: #f3f4f6;
+  --color-bg-panel: #ffffff;
+  --color-primary-main: #2563eb;
+  --color-secondary-main: #64748b;
+  --color-success-main: #10b981;
+  --color-warning-main: #f59e0b;
+  --color-danger-main: #ef4444;
+  --color-border-main: #e2e8f0;
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-bg-main text-text-main antialiased;
+  }
+}
+
+.quiz-card {
+  @apply bg-bg-panel border border-border-main rounded-lg shadow-sm overflow-hidden;
+}
+
+.option-btn {
+  @apply w-full flex items-center p-4 border border-border-main rounded-lg bg-bg-panel transition-all duration-200 hover:bg-slate-50 hover:border-primary-main disabled:opacity-75 disabled:cursor-not-allowed;
+}
+
+.option-btn.selected {
+  @apply bg-blue-50 border-primary-main ring-1 ring-primary-main;
+}
+
+.option-btn.correct {
+  @apply border-success-main bg-emerald-50 text-success-main;
+}
+
+.option-btn.incorrect {
+  @apply border-danger-main bg-red-50 text-danger-main;
+}
+
+.option-letter {
+  @apply w-8 h-8 bg-bg-main rounded-full flex items-center justify-center font-bold text-sm shrink-0 mr-4 transition-colors;
+}
+
+.selected .option-letter, .correct .option-letter {
+  @apply bg-primary-main text-white;
+}
+
+.incorrect .option-letter {
+  @apply bg-danger-main text-white;
+}
+
+.btn {
+  @apply px-5 py-2.5 rounded-md font-semibold cursor-pointer border-none text-sm flex items-center gap-2 transition-opacity hover:opacity-90;
+}
+
+.btn-outline {
+  @apply bg-transparent border border-border-main text-text-main;
+}
+
+.btn-primary {
+  @apply bg-primary-main text-white;
+}
+
+.btn-warning {
+  @apply bg-warning-main text-white;
+}
+
+.btn-danger {
+  @apply bg-danger-main text-white;
+}
