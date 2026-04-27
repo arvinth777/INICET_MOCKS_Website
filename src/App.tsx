@@ -6,6 +6,9 @@ const Landing = lazy(() => import('./components/Landing'));
 const Quiz = lazy(() => import('./components/Quiz'));
 const Result = lazy(() => import('./components/Result'));
 
+const UPLOADED_QUESTIONS_KEY = 'inicet_uploaded_questions';
+const LEGACY_QUESTIONS_KEY = 'inicet_custom_questions';
+
 export default function App() {
   const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
   const [questionsReady, setQuestionsReady] = useState(false);
@@ -42,7 +45,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('inicet_custom_questions');
+    const saved = localStorage.getItem(UPLOADED_QUESTIONS_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -56,17 +59,15 @@ export default function App() {
       }
     }
 
+    // Cleanup old cache key that previously stored bundled questions and caused stale data.
+    localStorage.removeItem(LEGACY_QUESTIONS_KEY);
+
     // Load bundled default questions lazily to reduce the initial JS payload.
     import('./data')
       .then(({ questions }) => setCustomQuestions(questions))
       .catch((e) => console.error('Failed to load default questions', e))
       .finally(() => setQuestionsReady(true));
   }, []);
-
-  useEffect(() => {
-    if (!questionsReady) return;
-    localStorage.setItem('inicet_custom_questions', JSON.stringify(customQuestions));
-  }, [customQuestions, questionsReady]);
 
   useEffect(() => {
     localStorage.setItem('inicet_quiz_state', JSON.stringify(state));
@@ -105,6 +106,7 @@ export default function App() {
 
   const handleUploadQuestions = (newQuestions: Question[]) => {
     setCustomQuestions(newQuestions);
+    localStorage.setItem(UPLOADED_QUESTIONS_KEY, JSON.stringify(newQuestions));
     // Restart active daily state automatically
     setState({
       currentQuestionIndex: 0,
